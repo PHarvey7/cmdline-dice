@@ -22,7 +22,11 @@ void print_error(char* message) {
  *  dependencies from the previous approach. */
 void init_random() {
 #ifndef _WIN32
+#ifndef USING_FALLBACK_RANDOM
   srandomdev();
+#else
+  srand(time(NULL));
+#endif
 #endif
 }
 
@@ -40,7 +44,11 @@ int get_next_random() {
   int snum = (int) num;
   return snum < 0 ? snum*-1 : snum;
 #else
+#ifndef USING_FALLBACK_RANDOM
   return (int) random();
+#else
+  return rand();
+#endif
 #endif
 }
 

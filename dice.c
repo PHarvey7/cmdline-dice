@@ -5,6 +5,7 @@
 
 #ifdef _WIN32
 #define _CRT_RAND_S
+#include <malloc.h>
 #endif
 #include "dice.h"
 #include <string.h>
@@ -26,7 +27,7 @@ void init_random() {
 }
 
 /** Gets a random number from the generator. Using BSD random() currently to go with
- *  srandomdev in init_random. */
+ *  srandomdev in init_random. Windows uses rand_s which has better performance than rand.*/
 int get_next_random() {
 #ifdef _WIN32
   unsigned int num;
@@ -35,7 +36,9 @@ int get_next_random() {
     print_error("Failed to get number from PRNG");
     exit(1);
   }
-  return (int) num;
+  // rand_s can return negative numbers when cast to int; so convert after casting
+  int snum = (int) num;
+  return snum < 0 ? snum*-1 : snum;
 #else
   return (int) random();
 #endif
@@ -215,7 +218,7 @@ ObjNode* parse_obj(char* inp, int len) {
     }
     this_obj->roll = NULL;
     this_obj->subList = NULL;
-    char numbuf[len+1];
+    STACK_ALLOC(char, numbuf, len+1);
     strncpy(numbuf, inp, len);
     numbuf[len] = '\0';
     this_obj->constant = atoi(numbuf);
@@ -265,8 +268,8 @@ RollNode* parse_roll(char* inp, int len) {
   int a_chars = d_loc - inp;
   int b_chars = len - ((d_loc - inp) + 1 + mod_chars);
 
-  char constA[a_chars+1];
-  char constB[b_chars+1];
+  STACK_ALLOC(char, constA, a_chars+1);
+  STACK_ALLOC(char, constB, b_chars+1);
 
   strncpy(constA, inp, a_chars);
   strncpy(constB, d_loc+1, b_chars);
@@ -338,7 +341,7 @@ RollModifier* parse_modifier(char* inp, int len) {
     return NULL;
   }
 
-  char constant[len];
+  STACK_ALLOC(char, constant, len);
   strncpy(constant, inp+1, len-1);
   constant[len-1] = '\0';
   int value = atoi(constant);
@@ -427,7 +430,7 @@ int sum_up(int* rolls, int count) {
 
 /** Performs a basic (unmodified) roll. */
 int execute_basic_roll(int dieCount, int dieSides, bool verbose) {
-  int rolls[dieCount];
+  STACK_ALLOC(int, rolls, dieCount);
   if (verbose) {
     printf("%dd%d:\n", dieCount, dieSides);
   }
@@ -453,7 +456,7 @@ int compare_roll_low(const void* r1, const void* r2) {
 /** Performs a roll where some subset of the rolled dice are to be accounted for in the total, with dice chosen based
  *  on the provided compison function, which will be used to sort the rolls before the top N are selected. */
 int execute_choose_n_roll(int dieCount, int dieSides, int nChoose, int(*comp)(const void*, const void*), bool verbose) {
-  int rolls[nChoose+1];
+  STACK_ALLOC(int, rolls, nChoose+1);
   int chosen = 0;
   int typechar = 'c';
   int test = 1;
@@ -488,7 +491,7 @@ int execute_choose_n_roll(int dieCount, int dieSides, int nChoose, int(*comp)(co
 
 /** Execute a roll where all rolls below a threshold are rerolled until they are above it. */
 int execute_reroll_below_roll(int dieCount, int dieSides, int rerollThresh, bool verbose) {
-  int rolls[dieCount];
+  STACK_ALLOC(int, rolls, dieCount);
   if (verbose) {
     printf("%dd%d%c%d:\n", dieCount, dieSides, 'b', rerollThresh);
   }
@@ -516,7 +519,7 @@ int execute_reroll_below_roll(int dieCount, int dieSides, int rerollThresh, bool
 
 /** Execute a roll where rolls above a certain value 'explode' into an extra (also included in total) roll. */
 int execute_exploding_roll(int dieCount, int dieSides, int explodeThresh, bool verbose) {
-  int rolls[dieCount];
+  STACK_ALLOC(int, rolls, dieCount);
   if (verbose) {
     printf("%dd%d%c%d:\n", dieCount, dieSides, 'v', explodeThresh);
   }

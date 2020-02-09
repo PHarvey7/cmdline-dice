@@ -40,6 +40,13 @@
 // The maximum length of a command in interactive mode, in chars.
 #define MAX_CMDLEN 1024
 
+// Portability concern - typical C compiler on Windows doesn't support C99 variable-length array declarations
+#ifdef _WIN32
+#define STACK_ALLOC(t,name,x) t* name = (t*) alloca(sizeof(char) * (x)) 
+#else
+#define STACK_ALLOC(t,name,x) t name[(x)]
+#endif
+
 typedef enum OpType {
   A_OP,
   M_OP

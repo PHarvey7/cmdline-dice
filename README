@@ -45,7 +45,7 @@ It is not necessary to restrict rolls to customary die types:
 
   ./dice 2d3+1d17+3d201
 
-The maximum die size should correlate to the maximum signed integer value on the system, unless the dice roller was compiled using the srand()/rand() fallback in which case dice with greater than RAND_MAX sides will be unable to results in rolls of any values higher than that (it is not uncommon for RAND_MAX to be small, such as 32767).
+The maximum die size should correlate to the maximum signed integer value on the system, unless the dice roller was compiled using the srand()/rand() fallback in which case dice with greater than RAND_MAX sides will be unable to result in rolls of any values higher than that (it is not uncommon for RAND_MAX to be small, such as 32767).
 
 Four types of modifiers can also be applied to rolls: choose-N-highest, choose-N-lowest, reroll-below-X, and reroll-and-keep-above-X.
 
@@ -116,7 +116,7 @@ This option will enable "verbose" mode. Each individual die rolled will be outpu
 
 This option will enable "interactive" mode. This will give a prompt at which rolls can be entered, instead of passing them as command-line arguments.
 To exit the program from this mode, enter 'q' or 'quit' into the prompt, or send the EOF character (CTRL+D in many POSIX systems).
-When in interactive mode, you can also change the output verbosity by entering 'set verbosity V', where V is a string corresponding to a vebosity level:
+When in interactive mode, you can also change the output verbosity by entering 'set verbosity V', where V is a string corresponding to a verbosity level:
 
 -- Verbose output --
   'set verbosity verbose'

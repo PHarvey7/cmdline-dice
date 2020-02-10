@@ -1,0 +1,139 @@
+Simple Command-Line Dice Roller
+(c) 2020 Patrick Harvey [see the included LICENSE.txt]
+
+This is a simple command-line dice roller program written in C. It allows entry of the "XdY" style of dice notations (meaning "roll X many Y-sided dice") on the command line and outputs the resulting die rolls.
+The program is primarily intended for use with tabletop role-playing games, board games, etc.. The methods of generating random numbers used are certainly not cryptographically secure, although some attention has been paid to the quality of randomness for the system.
+
+COMPILING
+
+Linux/MacOS/Unix/other POSIX:
+
+Run 'make' in the main code directory to compile the program with default settings. This will fail if srandomdev() and random() are unavailable on the system.
+If this is the case, the program can be built instead by running 'make no-bsd', although in this case the quality of random numbers produced by the program will be diminished (it will be built falling back to srand()/rand() instead of better RN sources).
+
+Windows:
+
+You will need to have Visual Studio installed to have usable access to a C compiler.
+Open the "Developer Command Prompt" that will be located in the VS folder in most usual VS installations.
+Navigate to the directoy containing dice.c and dice.h, and run 'cl dice.c'. This will produce the compiled output 'dice.exe'.
+
+USAGE
+
+At its most basic, invoke the executable dice with the desired roll(s) as command-line arguments.
+For example,
+
+  ./dice 1d4
+
+Will roll a single four-sided die and provide the result as output.
+
+Multiple rolls can be passed as separate command-line arguments and will be evaluated separately.
+For example,
+
+  ./dice 1d4 1d6 2d8
+
+Will roll one four-sided die and report the result, roll one six-sided die and report the result, and roll two eight-sided die, sum their rolled values and report the result.
+
+The dice-roller support simple infix arithmetic, along with parentheticals to enforce precedence.
+Some examples of valid rolls:
+
+  ./dice 2d4+8
+  ./dice 1d8+1d6+3
+  ./dice (2d6+1)*2
+  ./dice (1d6+1d8)*(1d10)
+
+It is not necessary to restrict rolls to customary die types:
+
+  ./dice 2d3+1d17+3d201
+
+The maximum die size should correlate to the maximum signed integer value on the system, unless the dice roller was compiled using the srand()/rand() fallback in which case dice with greater than RAND_MAX sides will be unable to results in rolls of any values higher than that (it is not uncommon for RAND_MAX to be small, such as 32767).
+
+Four types of modifiers can also be applied to rolls: choose-N-highest, choose-N-lowest, reroll-below-X, and reroll-and-keep-above-X.
+
+choose-N-highest:
+
+This modifier, applied to a roll of multiple dice (for example, 4d6), will cause the final value of the roll to consist of the total of only the N highest values rolled, rather than the total of all the dice rolled.
+To use this modifier, append to the roll 'cN', where N is the number of dice to keep.
+For example:
+
+  ./dice 4d6c3
+
+Would roll four six-sided dice and keep the highest three dice of the four.
+
+Passing a number of dice to keep greater than the number of dice rolled results in undefined behavior. Keeping 0 dice always results in a value of 0.
+
+choose-N-lowest:
+
+This modifier, applied to a roll of multiple dice, will cause the final value of the roll to consist of the total of only the N lowest values rolled, rather than the total off all dice rolled.
+This functions similarly to choose-N-highest.
+To use this modifier, append to the roll 'wN', where N is the number of dice to keep.
+For example:
+
+  ./dice 4d4w2
+
+Would roll four four-sided dice and keep the lowest two dice of the four.
+
+reroll-below-X:
+
+This modifier, applied to any roll, will cause dice that roll a value at or below X to be rerolled until their value is greater than X before being totaled.
+To use this modifier, append to the roll 'bX', where X is the value at or below which the die will be rerolled.
+For example:
+
+  ./dice 2d4b1
+
+Would roll two four-sided dice, and if either were to roll a 1 they would be rerolled until they rolled above 1. Only then would the values of the two dice be totaled into the resulting value.
+
+Note that if the number of dice or greater is passed as X with this modifier the program will loop infinitely.
+
+keep-and-reroll-above-X:
+
+This modifier, applied to any roll, will cause dice that roll a value at or above X to be rerolled and the old value also added into the total (this is sometimes known as an "exploding roll").
+To use this modifier, append to the roll 'vX', where X is the value at or above which to reroll.
+For example:
+
+  ./dice 2d6v6
+
+Would roll two six-sided dice, and any that roll six will have their value added into the total and also rerolled. Dice can be rerolled multiple times and add into the final total each time.
+
+Note that if 0 or 1 is passed as X with this modifier the program will loop infinitely.
+
+OPTIONS
+
+Some command-line options also exist for the program. These should be passed prior to any rolls.
+
+'-help'
+
+This option will print a short explanation of how to use the program.
+
+'-q'
+
+This option will enable "quiet" mode. The only output of the program will be the final result of each separate roll, one per line (separate roll means separate command-line arguments; "1d6+1d4+1" is a single roll in this sense), unless an error occurs.
+
+'-v'
+
+This option will enable "verbose" mode. Each individual die rolled will be output and labeled, including marking any dice that are rerolled or listing values kept if applicable modifiers are used.
+
+'-i'
+
+This option will enable "interactive" mode. This will give a prompt at which rolls can be entered, instead of passing them as command-line arguments.
+To exit the program from this mode, enter 'q' or 'quit' into the prompt, or send the EOF character (CTRL+D in many POSIX systems).
+When in interactive mode, you can also change the output verbosity by entering 'set verbosity V', where V is a string corresponding to a vebosity level:
+
+-- Verbose output --
+  'set verbosity verbose'
+  'set verbosity v'
+  'set verbosity -v'
+
+-- Default output --
+  'set verbosity normal'
+  'set verbosity default'
+
+-- Quiet output --
+  'set verbosity quiet'
+  'set verbosity q'
+  'set verbosity -q'
+
+RANDOM NUMBERS
+
+The random numbers used by the program for dice rolls aren't necessarily particularly high quality but the program does try to use a method better than the basic srand()/rand().
+On non-Windows platforms it attempts to use the POSIX srandomdev()/random() functions to produce RNs, and srand(time(NULL)) and rand() are only used as a fallback.
+On Windows, the dice roller uses rand_s to generate its random numbers, which appears to outperform basic rand() implementations at least.

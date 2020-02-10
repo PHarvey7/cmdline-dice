@@ -15,7 +15,7 @@ Windows:
 
 You will need to have Visual Studio installed to have usable access to a C compiler.
 Open the "Developer Command Prompt" that will be located in the VS folder in most usual VS installations.
-Navigate to the directoy containing dice.c and dice.h, and run 'cl dice.c'. This will produce the compiled output 'dice.exe'.
+Navigate to the directory containing dice.c and dice.h, and run 'cl dice.c'. This will produce the compiled output 'dice.exe'.
 
 USAGE
 
